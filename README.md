@@ -1,45 +1,90 @@
-````md
 # End2End — Encrypted Chat
 
-A simple 1-to-1 encrypted chat application built in Python for educational and portfolio purposes.
+A lightweight 1-to-1 encrypted chat application written in Python.
+Implements hybrid cryptography using RSA and AES to secure communications over TCP sockets.
 
-**Password-derived AES-256** protects RSA-2048 private keys · **RSA-2048** secures the AES session key exchange · **AES-256-GCM** encrypts messages.
+This project was built for educational and portfolio purposes to explore:
 
----
-
-## Disclaimer
-
-This project is an educational / academic cybersecurity project and is **not intended for production use**.
-
-It was designed to explore:
-- hybrid cryptography,
-- RSA key exchange,
-- AES-GCM authenticated encryption,
-- secure private key storage,
-- socket programming,
-- and secure communication concepts.
+* hybrid encryption,
+* authenticated encryption,
+* secure private key storage,
+* socket programming,
+* and secure communication protocols.
 
 ---
 
-## Installation
+# Features
+
+* RSA-2048 key generation
+* AES-256-GCM encrypted messaging
+* Password-protected RSA private keys
+* OAEP-SHA256 secure key exchange
+* Automatic key generation on first launch
+* Threaded send/receive architecture
+* TCP socket communication
+* Minimal terminal interface
+
+---
+
+# Technologies Used
+
+| Layer                  | Technology                              |
+| ---------------------- | --------------------------------------- |
+| Language               | Python 3                                |
+| Asymmetric Encryption  | RSA-2048                                |
+| Symmetric Encryption   | AES-256-GCM                             |
+| RSA Padding            | OAEP + SHA-256                          |
+| Private Key Protection | Password-derived AES encryption (PKCS8) |
+| Networking             | TCP sockets                             |
+| Concurrency            | Python threading                        |
+| Dependencies           | `cryptography`                          |
+
+---
+
+# Project Structure
+
+```text
+End2End/
+│
+├── server.py                # Encrypted chat server
+├── client.py                # Encrypted chat client
+├── requirements.txt
+├── README.md
+├── .gitignore
+│
+└── keys/
+    ├── server_private.pem
+    ├── server_public.pem
+    ├── client_private.pem
+    └── client_public.pem
+```
+
+The `keys/` directory is automatically generated during first execution.
+
+---
+
+# Installation
+
+Clone the repository:
+
+```bash
+git clone https://github.com/YOUR_USERNAME/End2End.git
+cd End2End
+```
+
+Install dependencies:
 
 ```bash
 pip install -r requirements.txt
-````
+```
 
----
-
-## Launch
-
-### Server side (listening machine)
+Run the server:
 
 ```bash
 python server.py
 ```
 
-### Client side (connecting machine)
-
-Edit `HOST` inside `client.py` with the server IP address, then run:
+Run the client:
 
 ```bash
 python client.py
@@ -47,31 +92,70 @@ python client.py
 
 ---
 
-## Using ngrok (Internet)
+# Usage
+
+## Server
+
+The server listens for incoming TCP connections:
 
 ```bash
-# On the server machine:
+python server.py
+```
+
+---
+
+## Client
+
+Edit the `HOST` variable inside `client.py` with the server IP address:
+
+```python
+HOST = "127.0.0.1"
+```
+
+Then launch:
+
+```bash
+python client.py
+```
+
+---
+
+# Using ngrok (Internet Access)
+
+On the server machine:
+
+```bash
 ngrok tcp 5566
 ```
 
-Copy the generated ngrok address (example: `0.tcp.eu.ngrok.io:12345`)
-and place it into `HOST` and `PORT` inside `client.py`.
+Example output:
+
+```text
+tcp://0.tcp.eu.ngrok.io:12345
+```
+
+Use:
+
+* `0.tcp.eu.ngrok.io` as `HOST`
+* `12345` as `PORT`
+
+inside `client.py`.
 
 ---
 
-## Cryptographic Architecture
+# Cryptographic Architecture
 
-The project uses hybrid encryption:
+The application uses hybrid encryption:
 
-| Purpose                     | Technology                                 |
-| --------------------------- | ------------------------------------------ |
-| RSA private key protection  | Password-derived AES-256 (encrypted PKCS8) |
-| Secure session key exchange | RSA-2048 + OAEP-SHA256                     |
-| Message encryption          | AES-256-GCM                                |
+| Purpose                     | Technology                      |
+| --------------------------- | ------------------------------- |
+| Private RSA key protection  | Password-derived AES encryption |
+| Secure session key exchange | RSA-2048 + OAEP-SHA256          |
+| Message encryption          | AES-256-GCM                     |
 
 ---
 
-## Key Exchange Protocol
+# Key Exchange Protocol
 
 ```text
 Server                              Client
@@ -88,34 +172,34 @@ Server                              Client
 
 ---
 
-## Encryption Workflow
+# Encryption Workflow
 
-### 1. RSA Private Key Protection
+## 1. RSA Private Key Protection
 
 On first launch:
 
 * an RSA-2048 key pair is generated;
 * the user chooses a password;
-* the password derives an AES key used to encrypt the private `.pem` file.
+* the password is used to encrypt the private `.pem` key file.
 
-Private RSA keys are therefore never stored in plaintext on disk.
+Private RSA keys are never stored in plaintext on disk.
 
 ---
 
-### 2. AES Session Key Exchange
+## 2. AES Session Key Exchange
 
 The server:
 
 1. receives the client's RSA public key;
-2. generates a random AES-256 key;
-3. encrypts the AES key using the client's RSA public key;
-4. sends the encrypted result to the client.
+2. generates a random AES-256 session key;
+3. encrypts the AES key using the client RSA public key;
+4. sends the encrypted AES key to the client.
 
-The client then decrypts it using its RSA private key.
+The client decrypts the AES key using its RSA private key.
 
 ---
 
-### 3. Message Encryption
+## 3. Message Encryption
 
 All messages use:
 
@@ -123,7 +207,7 @@ All messages use:
 * a random 12-byte nonce;
 * an integrated authentication tag.
 
-AES-GCM guarantees:
+AES-GCM provides:
 
 * confidentiality;
 * integrity;
@@ -131,7 +215,7 @@ AES-GCM guarantees:
 
 ---
 
-## Key Storage
+# Key Storage
 
 | File                      | Content              | Protection         |
 | ------------------------- | -------------------- | ------------------ |
@@ -140,15 +224,13 @@ AES-GCM guarantees:
 | `keys/client_private.pem` | RSA-2048 private key | Password-encrypted |
 | `keys/client_public.pem`  | RSA public key       | Public             |
 
-Keys are automatically generated on first launch.
-
 Never share:
 
 * `_private.pem` files
 
 ---
 
-## Commands
+# Commands
 
 | Command | Action                     |
 | ------- | -------------------------- |
@@ -156,36 +238,59 @@ Never share:
 
 ---
 
-## Current Security Properties
+# Security Notes
 
 The project currently provides:
 
 * encrypted communications;
-* message integrity;
+* authenticated encryption via AES-GCM;
 * local private key protection.
 
 The project does NOT yet provide:
 
-* strong peer authentication;
-* full protection against active MITM attacks;
+* peer authentication;
+* protection against active MITM attacks;
+* Perfect Forward Secrecy (PFS).
 
 ---
 
-## Known Limitations
+# Known Limitations
 
 * No peer authentication system
 * No multi-client support
-* No network anonymity (public IP remains visible)
 * No graphical interface
+* No relay infrastructure
+* Public IP remains visible during direct connections
 
 ---
 
-## Possible Future Improvements (v2)
+# Possible Future Improvements
 
 * RSA/ECDSA handshake signatures
+* X25519 ephemeral key exchange
+* Perfect Forward Secrecy (PFS)
 * Multi-client support
 * Encrypted relay system
-* Graphical interface
+* GUI application
+* File transfer support
 
-```
-```
+---
+
+# Disclaimer
+
+This project is intended for educational and portfolio purposes only.
+It is NOT designed for production-grade secure communications.
+
+For real-world secure messaging, use audited protocols and applications such as:
+
+* Signal
+* Matrix
+* Session
+* Wire
+
+---
+
+# Author
+
+Developed by **AROUA Raed**
+GitHub: https://github.com/RaedAroua0
